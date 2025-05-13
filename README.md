@@ -1,13 +1,16 @@
 <!-- TOC -->
 
-* [Traefik starter kit for VPS](#traefik-starter-kit-for-vps)
-    * [Prerequisites](#prerequisites)
-    * [Step1 - Configure and start Traefik](#step1---configure-and-start-traefik)
-    * [Step2 - Mount a Mysql database with Phpmyadmin](#step2---mount-a-mysql-database-with-phpmyadmin)
-    * [Deploy your projects](#deploy-your-projects)
-        * [For Simple-MVC & Symfony starter kits.](#for-simple-mvc--symfony-starter-kits)
-        * [Let's Encrypt SSL certificates explanations](#lets-encrypt-ssl-certificates-explanations)
-    * [Troubleshooting & useful commands](#troubleshooting--useful-commands)
+- [Traefik starter kit for VPS](#traefik-starter-kit-for-vps)
+  - [Prerequisites](#prerequisites)
+  - [Step1 - Configure and start Traefik](#step1---configure-and-start-traefik)
+  - [Step2 - Mount a Mysql database with Phpmyadmin](#step2---mount-a-mysql-database-with-phpmyadmin)
+  - [Deploy your projects](#deploy-your-projects)
+    - [For Simple-MVC \& Symfony starter kits.](#for-simple-mvc--symfony-starter-kits)
+  - [💡 Tips](#-tips)
+    - [For JS template projects](#for-js-template-projects)
+  - [Let's Encrypt SSL certificates explanations](#lets-encrypt-ssl-certificates-explanations)
+  - [Login to docker hub](#login-to-docker-hub)
+  - [Troubleshooting \& useful commands](#troubleshooting--useful-commands)
 
 <!-- TOC -->
 
@@ -17,10 +20,10 @@
 
 Must be installed on the VPS before anything else
 
-- Docker
-- Docker Compose
-- Git
-- htpasswd utility from apache2-utils
+-   Docker
+-   Docker Compose
+-   Git
+-   htpasswd utility from apache2-utils
 
 See [Prerequisites](PREREQUISITES.md) page for more information.
 
@@ -42,8 +45,8 @@ nano ./data/.env
 ```
 
 | Var                     | Description                                                                                                                                                                            |
-|-------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| HOST                    | Your main domain pointing to the VPS. You can write __localhost__ when running Docker in local.                                                                                        |
+| ----------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HOST                    | Your main domain pointing to the VPS. You can write **localhost** when running Docker in local.                                                                                        |
 | LETS_ENCRYPT_EMAIL      | Used to generate letsencrypt certificate. <br/> Write a valid email so you will receive renew reminders.                                                                               |
 | USER_NAME               | User login to Traefik dashboard. Will also be used to create a user with all privileges when installing the database. <br/>Can access to database from external container on port 3306 |
 | USER_PASSWORD           | User password to log in Traefik dashboard. Will be used for main user database too.                                                                                                    |
@@ -90,25 +93,49 @@ The `php-project.sh` file in the `deploy` directory can be used by Github action
 build of Docker containers automatically.
 You just have to add on each git repository three following secret variables and an environment variable as shown below.
 
-| Name         |   Type   | Path from git repository    | Description                                                                                                                                                                                                                                                                                                                                      |
-|--------------|:--------:|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| SSH_HOST     |  secret  | /settings/secrets/actions   | Your VPS IP address                                                                                                                                                                                                                                                                                                                              |
-| SSH_USER     |  secret  | /settings/secrets/actions   | Your ssh user name                                                                                                                                                                                                                                                                                                                               |
-| SSH_PASSWORD |  secret  | /settings/secrets/actions   | Your ssh user password                                                                                                                                                                                                                                                                                                                           |
-| PROJECT_NAME | variable | /settings/variables/actions | The name you want to give to the project. This name will be used to generate the Docker container as well as the subdomain and associated services (e.g. https://project-name.your-domain.wilders.dev, https://mailhog.project-name.your-domain.wilders.dev, etc.). ⚠️ Be careful not to use underscores in the project name but rather hyphens. |
-| APP_ENV      | variable | /settings/variables/actions | [optional]  Deployment environment (dev, test, prod)                                                                                                                                                                                                                                                                                             |
+| Name            |   Type   | Path from git repository    | Description                                                                                                                                                                                                                                                                                                                                      |
+| --------------- | :------: | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SSH_HOST        |  secret  | /settings/secrets/actions   | Your VPS IP address                                                                                                                                                                                                                                                                                                                              |
+| SSH_USER        |  secret  | /settings/secrets/actions   | Your ssh user name                                                                                                                                                                                                                                                                                                                               |
+| SSH_PASSWORD    |  secret  | /settings/secrets/actions   | Your ssh user password                                                                                                                                                                                                                                                                                                                           |
+| DOCKER_USERNAME |  secret  | /settings/secrets/actions   | Docker Hub username.(**only for the JS template**).                                                                                                                                                                                                                                                                                              |
+| DOCKER_PASSWORD |  secret  | /settings/secrets/actions   | Docker Hub password. (or token, **only for the JS template**)                                                                                                                                                                                                                                                                                    |
+| PROJECT_NAME    | variable | /settings/variables/actions | The name you want to give to the project. This name will be used to generate the Docker container as well as the subdomain and associated services (e.g. https://project-name.your-domain.wilders.dev, https://mailhog.project-name.your-domain.wilders.dev, etc.). ⚠️ Be careful not to use underscores in the project name but rather hyphens. |
+| APP_ENV         | variable | /settings/variables/actions | [optional] Deployment environment (dev, test, prod)                                                                                                                                                                                                                                                                                              |
 
-No prior configuration is required. Deployments are based on the Dockerfile and docker-compose.yml files integrated in
-each project.  
-The projects are automatically cloned in the `~/projects` directory in the root of the user folder. The names of the git
-repositories used to generate the associated databases. That's all!
+## 💡 Tips
+
+To quickly add secret info to the project, you can use the github CLI (gh) with the following command:
+
+```bash
+gh secret set -f <path-to-file>/<secret-name>.env
+```
+
+example:
+
+```bash
+gh secret set -f /Users/anthonygorski/Document/vps/secret_github_projects/github-secrets-deploy-to-vps.env
+```
+
+My dotenv looks like this:
+
+```dotenv
+SSH_HOST=192.168.1.42
+SSH_USER=ubuntu
+SSH_PASSWORD=**********
+DOCKER_USERNAME=**********
+DOCKER_PASSWORD=**********
+```
+
+This command will prompt you for the values of each secret variable.
 
 Github CLI can be very useful to generate very quickly the secret variables from an `.env` file.
 See [https://cli.github.com/manual/gh_secret_set](https://cli.github.com/manual/gh_secret_set) for further
-information.  
+information.
 
 ### For JS template projects
-Same configuration as above. `js-project.sh` will be triggered by the Github action workflow.
+
+Same configuration as above. `js-project-docker.sh` will be triggered by the Github action workflow.
 
 ## Let's Encrypt SSL certificates explanations
 
@@ -121,6 +148,14 @@ To regenerate one or more certificates, simply restart Traefik. Run the command 
 ```bash
 bash restart.sh
 ```
+
+## Login to docker hub
+
+```bash
+docker login
+```
+
+You will be prompted for your Docker Hub username and password.
 
 ## Troubleshooting & useful commands
 
